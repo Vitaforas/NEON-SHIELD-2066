@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>NEON SHIELD 2066</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;overflow:hidden;background:#05030e;
+    font-family:'Courier New',ui-monospace,monospace;color:#cfe9ff;
+    touch-action:none;overscroll-behavior:none;user-select:none;-webkit-user-select:none}
+  #game{display:block;position:absolute;inset:0;cursor:crosshair}
+  .overlay{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:18px;padding:24px;text-align:center;z-index:20;
+    background:radial-gradient(circle at 50% 40%,rgba(20,0,40,.86),rgba(3,2,10,.97));
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    animation:fade .35s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .hidden{display:none !important}
+  h1{font-size:clamp(30px,7vw,64px);letter-spacing:6px;line-height:1;
+     color:#fff;text-shadow:0 0 12px #00f0ff,0 0 38px #00f0ff,0 0 70px #0af}
+  h1 span{color:#ff00a0;text-shadow:0 0 14px #ff00a0,0 0 44px #f0a}
+  h2{font-size:clamp(20px,4.5vw,32px);letter-spacing:4px;color:#0ff;
+     text-shadow:0 0 14px #0ff}
+  .sub{font-size:clamp(11px,2.6vw,15px);letter-spacing:2px;color:#7aa7c9;max-width:620px;line-height:1.7}
+  .choices{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+  button{
+    font-family:inherit;font-size:clamp(13px,3vw,18px);letter-spacing:3px;font-weight:bold;
+    padding:14px 30px;border-radius:6px;cursor:pointer;color:#dff;
+    background:rgba(0,240,255,.07);border:2px solid #0ff;
+    box-shadow:0 0 14px rgba(0,240,255,.4),inset 0 0 22px rgba(0,240,255,.1);
+    transition:transform .12s,box-shadow .12s,background .12s}
+  button:hover,button:active{transform:scale(1.05);background:rgba(0,240,255,.2);
+    box-shadow:0 0 28px rgba(0,240,255,.85),inset 0 0 30px rgba(0,240,255,.25)}
+  button.mag{color:#fdd;border-color:#f0a;background:rgba(255,0,160,.07);
+    box-shadow:0 0 14px rgba(255,0,160,.4),inset 0 0 22px rgba(255,0,160,.1)}
+  button.mag:hover,button.mag:active{background:rgba(255,0,160,.2);
+    box-shadow:0 0 28px rgba(255,0,160,.85),inset 0 0 30px rgba(255,0,160,.25)}
+  .ctrl{font-size:clamp(10px,2.3vw,13px);color:#5f7f99;letter-spacing:1.5px;line-height:1.9;margin-top:10px}
+  .ctrl b{color:#0ff}
+  /* ---- Touch ---- */
+  #touch{position:absolute;inset:0;z-index:10;pointer-events:none}
+  #joyBase{position:absolute;left:18px;bottom:24px;width:132px;height:132px;border-radius:50%;
+    background:radial-gradient(circle,rgba(0,240,255,.13),rgba(0,240,255,.03));
+    border:2px solid rgba(0,240,255,.4);box-shadow:0 0 22px rgba(0,240,255,.28);
+    pointer-events:auto;touch-action:none}
+  #joyKnob{position:absolute;left:50%;top:50%;width:58px;height:58px;border-radius:50%;
+    background:radial-gradient(circle,#0ff,#06a);transform:translate(-50%,-50%);
+    box-shadow:0 0 20px #0ff,0 0 40px rgba(0,240,255,.5);pointer-events:none}
+  .tbtn{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-weight:bold;letter-spacing:1px;font-size:14px;color:#dff;pointer-events:auto;touch-action:none;
+    border:2px solid #0ff;background:rgba(0,240,255,.1);
+    box-shadow:0 0 18px rgba(0,240,255,.35),inset 0 0 20px rgba(0,240,255,.1)}
+  .tbtn:active{background:rgba(0,240,255,.35);box-shadow:0 0 32px rgba(0,240,255,.9)}
+  #btnFire{right:20px;bottom:96px;width:96px;height:96px;font-size:15px;
+    border-color:#f0a;color:#fdd;background:rgba(255,0,160,.1);
+    box-shadow:0 0 18px rgba(255,0,160,.4),inset 0 0 20px rgba(255,0,160,.1)}
+  #btnFire:active{background:rgba(255,0,160,.4);box-shadow:0 0 34px rgba(255,0,160,.95)}
+  #btnUse{right:126px;bottom:34px;width:70px;height:70px;font-size:13px}
+  /* ---- Shop ---- */
+  #shopList{display:flex;flex-direction:column;gap:10px;width:min(560px,94vw);max-height:52vh;overflow-y:auto;padding:4px}
+  .shopItem{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:8px;
+    border:2px solid rgba(0,240,255,.3);background:rgba(0,240,255,.05);text-align:left;
+    cursor:pointer;transition:.12s}
+  .shopItem:hover{background:rgba(0,240,255,.16);border-color:#0ff;transform:translateX(4px)}
+  .shopItem.owned{opacity:.4;pointer-events:none}
+  .swatch{width:34px;height:20px;border-radius:5px;flex-shrink:0}
+  .sinfo{flex:1}
+  .sname{font-size:15px;letter-spacing:2px;color:#fff;font-weight:bold}
+  .sstat{font-size:11px;color:#6fa6c4;letter-spacing:1px;margin-top:3px}
+  .sprice{font-size:16px;color:#ffd400;font-weight:bold;text-shadow:0 0 10px #ffd400}
+  #gameOver h1{color:#f44;text-shadow:0 0 14px #f00,0 0 44px #f00}
+  .stat{font-size:clamp(14px,3.4vw,20px);letter-spacing:2px;color:#0ff}
+  .stat b{color:#ffd400;text-shadow:0 0 12px #ffd400}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="touch" class="hidden">
+  <div id="joyBase"><div id="joyKnob"></div></div>
+  <div id="btnFire" class="tbtn">FEUER</div>
+  <div id="btnUse" class="tbtn">E</div>
+</div>
+
+<!-- START -->
+<div id="startScreen" class="overlay">
+  <h1>NEON<span>SHIELD</span> 2066</h1>
+  <div class="sub">NEO-KOWLOON, 2066. Die Stadt gehört den Konzernen — und die Straßen gehören DIR.<br>
+  Wähle deine Seite. Fahr durch die offene Welt. Verdiene Credits. Überlebe.</div>
+  <div class="choices">
+    <button data-faction="police">◈ POLIZEI</button>
+    <button class="mag" data-faction="robber">◈ RÄUBER</button>
+  </div>
+  <div class="ctrl">
+    <b>WASD</b> bewegen / fahren &nbsp;·&nbsp; <b>MAUS</b> zielen &nbsp;·&nbsp; <b>KLICK</b> feuern<br>
+    <b>E</b> Fahrzeug betreten/verlassen &nbsp;·&nbsp; <b>E</b> beim Händler = Shop<br>
+    <span style="color:#f0a">Handy: Joystick links · FEUER / E rechts</span>
+  </div>
+</div>
+
+<!-- SHOP -->
+<div id="shop" class="overlay hidden">
+  <h2>CAR DEALER 24/7</h2>
+  <div id="shopList"></div>
+  <button id="shopClose">SCHLIESSEN</button>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameOver" class="overlay hidden">
+  <h1>WASTED</h1>
+  <div class="stat">CREDITS: <b id="goScore">0</b></div>
+  <div class="stat" style="font-size:14px">KILLS: <b id="goKills">0</b> &nbsp;·&nbsp; MISSIONS: <b id="goMissions">0</b></div>
+  <div class="choices">
+    <button id="restartBtn">NEU STARTEN</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   UTIL
+============================================================ */
+const rand=(a,b)=>a+Math.random()*(b-a);
+const randi=(a,b)=>Math.floor(a+Math.random()*(b-a+1));
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+const dist=(a,b,c,d)=>Math.hypot(c-a,d-b);
+const lerp=(a,b,t)=>a+(b-a)*t;
+const TAU=Math.PI*2;
+function angDiff(a,b){let d=(b-a)%TAU;if(d>Math.PI)d-=TAU;if(d<-Math.PI)d+=TAU;return d;}
+function pathRoundRect(c,x,y,w,h,r){
+  r=Math.min(r,Math.abs(w)/2,Math.abs(h)/2);
+  c.beginPath();
+  c.moveTo(x+r,y);
+  c.arcTo(x+w,y,x+w,y+h,r);
+  c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r);
+  c.arcTo(x,y,x+w,y,r);
+  c.closePath();
+}
+
+/* ============================================================
+   AUDIO (WebAudio, prozedural)
+============================================================ */
+const SFX={
+  ctx:null,master:null,
+  init(){
+    if(this.ctx)return;
+    try{
+      this.ctx=new (window.AudioContext||window.webkitAudioContext)();
+      this.master=this.ctx.createGain();
+      this.master.gain.value=0.28;
+      this.master.connect(this.ctx.destination);
+    }catch(e){}
+  },
+  resume(){ if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume(); },
+  tone(freq,dur,type,vol,slideTo){
+    if(!this.ctx)return;
+    const t=this.ctx.currentTime;
+    const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+    o.type=type||'square';o.frequency.setValueAtTime(freq,t);
+    if(slideTo)o.frequency.exponentialRampToValueAtTime(Math.max(20,slideTo),t+dur);
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol||0.25,t+0.008
